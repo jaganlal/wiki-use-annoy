@@ -1,0 +1,7 @@
+annoy
+tensorflow
+tensorflow_hub
+numpy
+pandas
+csv
+
