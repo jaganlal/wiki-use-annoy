@@ -3,6 +3,19 @@ Short wikipedia articles lookup using Google's USE (Universal Sentence Encoder) 
 
 ### Note: Not the entire wikipedia articles lookup ;). Checkout the disclaimer below
 
+## Installation
+
+### Clone the repo
+```
+git clone https://github.com/jaganlal/wiki-use-annoy.git
+cd wiki-use-annoy/
+```
+
+### Install the required libs
+```
+pip install -r requirements.txt
+```
+
 ## Usage
 
 ### Model Download
