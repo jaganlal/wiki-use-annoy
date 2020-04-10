@@ -36,7 +36,7 @@ def load_sentences(file):
 
 def read_data(path, filter_data):
   df_docs = pd.read_csv(path, usecols=['GUID', 'CONTENT', 'ENTITY'])
-  return df_docs.to_numpy()
+  return df_docs
 
 def read_data_as_dict(path, key_column, value_column, filter_data):
   data_dict = {}
@@ -60,14 +60,15 @@ def main():
     print_with_time('Annoy Index: {}'.format(ann.get_n_items()))
 
     start_time = time.time()
-    content_array = read_data(args.csv_file_path, args.filter_data)
+    df = read_data(args.csv_file_path, args.filter_data)
+    content_array = df.to_numpy()
     end_time = time.time()
     print_with_time('Sentences: {} Time: {}'.format(len(content_array), end_time - start_time))
 
-    start_time = time.time()
-    content_dict = read_data_as_dict(args.csv_file_path, 'GUID', 'CONTENT', args.filter_data)
-    end_time = time.time()
-    print_with_time('Dictionary: Time: {}'.format(end_time - start_time))
+    # start_time = time.time()
+    # content_dict = read_data_as_dict(args.csv_file_path, 'GUID', 'CONTENT', args.filter_data)
+    # end_time = time.time()
+    # print_with_time('Dictionary: Time: {}'.format(end_time - start_time))
 
     start_time = time.time()
     embed = hub.Module(args.use_model)
@@ -84,11 +85,14 @@ def main():
 
       if input_sentence_id == 'q':
         return
+
       print_with_time('Input Sentence: {}'.format(input_sentence_id))
-      input_sentence = content_dict[input_sentence_id]
+      query_filter = 'GUID == "' + input_sentence_id + '"'
+      input_data_object = df.query(query_filter)
+      input_sentence = input_data_object['CONTENT']
 
       start_time = time.time()
-      sentence_vector = sess.run(embedding_fun, feed_dict={sentences_ph:[input_sentence]})
+      sentence_vector = sess.run(embedding_fun, feed_dict={sentences_ph:input_sentence})
       print_with_time('vec done')
       nns = ann.get_nns_by_vector(sentence_vector[0], args.k)
       end_time = time.time()
