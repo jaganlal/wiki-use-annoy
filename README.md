@@ -20,6 +20,20 @@ Short wikipedia articles lookup using Google's USE (Universal Sentence Encoder) 
 
     `python find-similar-wiki-articles.py`
 
+Key in the id, say for example `music-wikipedia`. 
+You'll see the following results (in the form of id for similicity)
+```
+pop-wikipedia
+guitar-wikipedia
+brain-wikipedia
+world-wikipedia
+science-wikipedia
+malayalam-wikipedia
+sourashtra-wikipedia
+apple-wikipedia
+usa-wikipedia
+```
+
 
 ## Disclaimer
 I started to create (short-wiki.csv) a short intro on some of the articles (source: wikipedia) about places, people, culture etc. So this application will lookup from that articles. Checkout `short-wiki.csv` for more information on this. You can imagine this as a cleaned up data lookup. If you want to contribute (either code or data part), please feel free to fork it and create a PR.
