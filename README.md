@@ -51,7 +51,10 @@ usa-wikipedia
 ## Disclaimer
 I started to create (short-wiki.csv) a short intro on some of the articles (source: wikipedia) about places, people, culture etc. So this application will lookup from that articles. Checkout `short-wiki.csv` for more information on this. You can imagine this as a cleaned up data lookup. If you want to contribute (either code or data part), please feel free to fork it and create a PR.
 
+## Note
+As you have noticed, there are no error handlings
+
 ## References
-https://medium.com/@vineet.mundhra/finding-similar-sentences-using-wikipedia-and-tensorflow-hub-dee2f52ed587
 https://towardsdatascience.com/use-cases-of-googles-universal-sentence-encoder-in-production-dd5aaab4fc15
 
+https://medium.com/@vineet.mundhra/finding-similar-sentences-using-wikipedia-and-tensorflow-hub-dee2f52ed587

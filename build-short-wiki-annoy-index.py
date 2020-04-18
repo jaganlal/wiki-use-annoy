@@ -10,6 +10,9 @@ from annoy import AnnoyIndex
 import numpy as np
 import pandas as pd
 
+print('TF version: {}'.format(tf.__version__))
+print('TF-Hub version: {}'.format(hub.__version__))
+
 # Globals
 D = 512
 
@@ -40,8 +43,8 @@ def build_index(embedding_fun, batch_size, sentences, content_array):
     batch_indexes = []
     last_indexed = 0
     num_batches = 0
-    with tf.Session() as sess:
-        sess.run([tf.global_variables_initializer(), tf.tables_initializer()])
+    with tf.compat.v1.Session() as sess:
+        sess.run([tf.compat.v1.global_variables_initializer(), tf.compat.v1.tables_initializer()])
         for sindex, sentence in enumerate(content_array):
             batch_sentences.append(sentence[1]) #'CONTENT'
             batch_indexes.append(sindex)
@@ -67,7 +70,7 @@ def main():
     print_with_time(args)
 
     embed = hub.Module(args.use_model)
-    sentences = tf.placeholder(dtype=tf.string, shape=[None])
+    sentences = tf.compat.v1.placeholder(dtype=tf.string, shape=[None])
     embedding_fun = embed(sentences)
 
     start_time = time.time()

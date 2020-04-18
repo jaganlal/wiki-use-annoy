@@ -91,11 +91,11 @@ def main():
 
     start_time = time.time()
     embed = hub.Module(args.use_model)
-    sentences_ph = tf.placeholder(dtype=tf.string, shape=[None])
+    sentences_ph = tf.compat.v1.placeholder(dtype=tf.string, shape=[None])
     embedding_fun = embed(sentences_ph)
 
-    sess = tf.Session()
-    sess.run([tf.global_variables_initializer(), tf.tables_initializer()])
+    sess = tf.compat.v1.Session()
+    sess.run([tf.compat.v1.global_variables_initializer(), tf.compat.v1.tables_initializer()])
     end_time = time.time()
     
 
