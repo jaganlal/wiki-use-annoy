@@ -55,6 +55,8 @@ I started to create (short-wiki.csv) a short intro on some of the articles (sour
 As you have noticed, there are no error handlings
 
 ## References
+https://github.com/jaganlal/wiki-use-annoy-tf2/blob/master/README.md
+
 https://towardsdatascience.com/use-cases-of-googles-universal-sentence-encoder-in-production-dd5aaab4fc15
 
 https://medium.com/@vineet.mundhra/finding-similar-sentences-using-wikipedia-and-tensorflow-hub-dee2f52ed587
