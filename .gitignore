@@ -1,2 +1,3 @@
 *.annoy.index
 use-large*/*
+__pycache__/find-similarities.cpython-37.pyc

@@ -22,7 +22,7 @@ def print_with_time(msg):
 def setup_args():
   parser = argparse.ArgumentParser()
   parser.add_argument('-sentences')
-  parser.add_argument('-use_model', default='./use-large-3', type=str)
+  parser.add_argument('-use_model', default='../model/use-2', type=str)
   parser.add_argument('-csv_file_path', default='./short-wiki.csv', type=str)
   parser.add_argument('-ann', default='wiki.annoy.index', type=str)
   parser.add_argument('-filter_data', default=0, type=int, help='1 to on, 0 to off')

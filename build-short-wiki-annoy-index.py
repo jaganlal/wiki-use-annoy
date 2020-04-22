@@ -24,7 +24,7 @@ def print_with_time(msg):
 def setup_args():
     parser = argparse.ArgumentParser()
     parser.add_argument('-sentences')
-    parser.add_argument('-use_model', default='./use-large-3', type=str)
+    parser.add_argument('-use_model', default='../model/use-2', type=str)
     parser.add_argument('-csv_file_path', default='./short-wiki.csv', type=str)
     parser.add_argument('-ann', default='wiki.annoy.index', type=str)
     parser.add_argument('-batch_size', default=32, type=int)
@@ -69,7 +69,7 @@ def main():
     args = setup_args()
     print_with_time(args)
 
-    embed = hub.Module(args.use_model)
+    embed = hub.Module('https://tfhub.dev/google/universal-sentence-encoder-large/3')
     sentences = tf.compat.v1.placeholder(dtype=tf.string, shape=[None])
     embedding_fun = embed(sentences)
 
