@@ -4,6 +4,7 @@ from flask_cors import CORS
 import json
 from json import JSONEncoder
 
+import os
 import time
 import sys
 
@@ -20,11 +21,15 @@ cors = CORS(app, resources={r"/*": {"origins": "*"}})
 
 app.config['DEBUG'] = True
 
-annoy_index = None
+# globals
 VECTOR_SIZE = 512
 default_use_model = 'https://tfhub.dev/google/universal-sentence-encoder-large/3?tf-hub-format=compressed'
 default_csv_file_path = './short-wiki.csv'
-default_ann_index_file = 'wiki.annoy.index'
+model_indexes_path = './model-indexes/'
+model_index_reference_file = 'index.txt'
+default_index_file = 'wiki.annoy.use.large3.index'
+default_index_filepath = model_indexes_path + default_index_file
+# default_ann_index_file = './wiki.annoy.index'
 default_k = 10
 default_batch_size = 32
 default_num_trees = 10
@@ -59,23 +64,32 @@ def train_model():
 def predict_sentence():
   params = request.get_json()
   result = predict(params)
-  # r = SimilarityResultEncoder().encode(result)
   return json.dumps(result, cls=SimilarityResultEncoder)
 
-def print_with_time(msg):
-  print('{}: {}'.format(time.ctime(), msg))
-  sys.stdout.flush()
+@app.route('/get-model-indexes', methods=['GET'])
+def get_model_indexes():
+  result = get_index_files()
+  return json.dumps(result)
 
-def read_data(path):
-  df_docs = None
-
+# methods called from the APIs
+def get_index_files():
+  result = None
   try:
-    df_docs = pd.read_csv(path, usecols=['GUID', 'CONTENT', 'ENTITY'])
-  except Exception as e:
-      print('Exception in read_data: {0}'.format(e))
-      raise
+    df = pd.read_csv(model_indexes_path + model_index_reference_file, usecols=['FILENAME', 'MODEL-URL', 'MODEL-SHORT-NAME'])
+    result = df.values.tolist()
 
-  return df_docs
+    # for root, dirs, files in os.walk(model_indexes_path):
+    #   for file in files:
+    #     print(os.path.join(root, file))
+    #     files.append(file)
+
+  except Exception as e:
+    print('Exception in read_data: {0}'.format(e))
+    result = {
+        'error': 'Failure'
+    }
+
+  return result
 
 def train(params):
   result = {}
@@ -83,46 +97,47 @@ def train(params):
   print('Training', params)
 
   annoy_vector_dimension = VECTOR_SIZE
-  ann_index_file = default_ann_index_file
+  index_file = default_index_file
 
   data_file = default_csv_file_path
   use_model = default_use_model
-  k = default_k
-
-  input_sentence_id = None
+  num_trees = default_num_trees
 
   try:
     if params:
-      if params.get('guid'):
-        input_sentence_id = params.get('guid')
       if params.get('vector_size'):
         annoy_vector_dimension = params.get('vector_size')
-      if params.get('ann_index_file'):
-        ann_index_file = params.get('ann_index_file')
+      if params.get('index_file'):
+        index_file = params.get('index_file')
       if params.get('data_file'):
         data_file = params.get('data_file')
       if params.get('use_model'):
         use_model = params.get('use_model')
-      if params.get('k'):
-        k = params.get('k')
-
-    embed = hub.Module(use_model)
-    sentences = tf.compat.v1.placeholder(dtype=tf.string, shape=[None])
-    embedding_fun = embed(sentences)
 
     start_time = time.time()
-    df = read_data(data_file)
-    content_array = df.to_numpy()
+    embed_func = hub.Module(use_model)
+    end_time = time.time()
+    print_with_time('Load the module: {}'.format(end_time-start_time))
+
+    start_time = time.time()
+    sentences = tf.compat.v1.placeholder(dtype=tf.string, shape=[None])
+    embedding = embed_func(sentences)
+    end_time = time.time()
+    print_with_time('Init sentences embedding: {}'.format(end_time-start_time))
+
+    start_time = time.time()
+    data_frame = read_data(data_file)
+    content_array = data_frame.to_numpy()
     end_time = time.time()
     print('Read Data Time: {}'.format(end_time - start_time))
 
     start_time = time.time()
-    ann = build_index(annoy_vector_dimension, embedding_fun, default_batch_size, sentences, content_array)
+    ann = build_index(annoy_vector_dimension, embedding, default_batch_size, sentences, content_array)
     end_time = time.time()
     print('Build Index Time: {}'.format(end_time - start_time))
 
-    ann.build(default_num_trees)
-    ann.save(ann_index_file)
+    ann.build(num_trees)
+    ann.save(model_indexes_path + index_file)
 
     result = {
       'message': 'Training successful'
@@ -141,13 +156,8 @@ def predict(params):
 
   print('Predict', params)
 
-  result = SimilarityResult('123', '123 sentence', [])
-  print(SimilarityResultEncoder().encode(result))
-  
-  # return result
-
   annoy_vector_dimension = VECTOR_SIZE
-  ann_index_file = default_ann_index_file
+  index_file = default_index_file
 
   data_file = default_csv_file_path
   use_model = default_use_model
@@ -161,8 +171,8 @@ def predict(params):
         input_sentence_id = params.get('guid')
       if params.get('vector_size'):
         annoy_vector_dimension = params.get('vector_size')
-      if params.get('ann_index_file'):
-        ann_index_file = params.get('ann_index_file')
+      if params.get('index_file'):
+        index_file = params.get('index_file')
       if params.get('data_file'):
         data_file = params.get('data_file')
       if params.get('use_model'):
@@ -177,31 +187,46 @@ def predict(params):
       }
       return result
 
-    annoy_index = AnnoyIndex(annoy_vector_dimension)
-    annoy_index.load(ann_index_file)
+    start_time = time.time()
+    annoy_index = AnnoyIndex(annoy_vector_dimension, metric='angular')
+    annoy_index.load(model_indexes_path + index_file)
+    end_time = time.time()
+    print_with_time('Annoy Index load time: {}'.format(end_time-start_time))
 
-    df = read_data(data_file)
-    content_array = df.to_numpy()
+    start_time = time.time()
+    data_frame = read_data(data_file)
+    content_array = data_frame.to_numpy()
+    end_time = time.time()
+    print_with_time('Time to read data file: {}'.format(end_time-start_time))
 
-    embed = hub.Module(use_model)
+    start_time = time.time()
+    embed_func = hub.Module(use_model)
+    end_time = time.time()
+    print_with_time('Load the module: {}'.format(end_time-start_time))
+
+    start_time = time.time()
     sentences = tf.compat.v1.placeholder(dtype=tf.string, shape=[None])
-    embedding = embed(sentences)
+    embedding = embed_func(sentences)
+    end_time = time.time()
+    print_with_time('Init sentences embedding: {}'.format(end_time-start_time))
 
+    start_time = time.time()
     sess = tf.compat.v1.Session()
     sess.run([tf.compat.v1.global_variables_initializer(), tf.compat.v1.tables_initializer()])
+    end_time = time.time()
+    print_with_time('Time to create session: {}'.format(end_time-start_time))
 
     print_with_time('Input Sentence id: {}'.format(input_sentence_id))
     params_filter = 'GUID == "' + input_sentence_id + '"'
-    input_data_object = df.query(params_filter)
+    input_data_object = data_frame.query(params_filter)
     input_sentence = input_data_object['CONTENT']
 
     start_time = time.time()
     sentence_vector = sess.run(embedding, feed_dict={sentences:input_sentence})
-    print_with_time('vec done')
     nns = annoy_index.get_nns_by_vector(sentence_vector[0], k)
     end_time = time.time()
-
     print_with_time('nns done: Time: {}'.format(end_time-start_time))
+
     similar_sentences = []
     similarities = [content_array[nn] for nn in nns]
     for sentence in similarities[1:]:
@@ -212,12 +237,6 @@ def predict(params):
       print(sentence[0])
 
     result = SimilarityResult(input_sentence_id, input_sentence.values[0], similar_sentences)
-    # print(SimilarityResultEncoder().encode(result))
-    # result = {
-    #   'souceGuid': input_sentence_id,
-    #   'sourceSentence': input_sentence,
-    #   'similar_sentences': similar_sentences
-    # }
   
   except Exception as e:
     print('Exception in predict: {0}'.format(e))
@@ -227,8 +246,25 @@ def predict(params):
 
   return result    
 
+
+# private methods
+def print_with_time(msg):
+  print('{}: {}'.format(time.ctime(), msg))
+  sys.stdout.flush()
+
+def read_data(path):
+  df_docs = None
+
+  try:
+    df_docs = pd.read_csv(path, usecols=['GUID', 'CONTENT', 'ENTITY'])
+  except Exception as e:
+      print('Exception in read_data: {0}'.format(e))
+      raise
+
+  return df_docs
+
 def build_index(annoy_vector_dimension, embedding_fun, batch_size, sentences, content_array):
-  ann = AnnoyIndex(annoy_vector_dimension)
+  ann = AnnoyIndex(annoy_vector_dimension, metric='angular')
   batch_sentences = []
   batch_indexes = []
   last_indexed = 0

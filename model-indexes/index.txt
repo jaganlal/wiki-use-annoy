@@ -1,0 +1,3 @@
+FILENAME,MODEL-URL,MODEL-SHORT-NAME
+wiki.annoy.use.2.index,https://tfhub.dev/google/universal-sentence-encoder/2?tf-hub-format=compressed,use-2
+wiki.annoy.use.large3.index,https://tfhub.dev/google/universal-sentence-encoder-large/3?tf-hub-format=compressed,use-large-3
