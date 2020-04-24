@@ -55,6 +55,8 @@ I started to create (short-wiki.csv) a short intro on some of the articles (sour
 As you have noticed, there are no error handlings
 
 ## References
+https://jaganlal.github.io/ui-sentence-similarity/
+
 https://github.com/jaganlal/wiki-use-annoy-tf2/blob/master/README.md
 
 https://towardsdatascience.com/use-cases-of-googles-universal-sentence-encoder-in-production-dd5aaab4fc15
